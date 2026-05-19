@@ -2,7 +2,10 @@
 
 import { openai } from './openai';
 import { prisma } from './prisma';
-import { Assignment, Task } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
+
+type Assignment = Prisma.AssignmentGetPayload<object>;
+type Task = Prisma.TaskGetPayload<object>;
 
 // ─────────────────────────────────────────
 // Types

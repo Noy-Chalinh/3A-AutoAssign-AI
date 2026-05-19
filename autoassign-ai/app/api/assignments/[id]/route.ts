@@ -57,7 +57,6 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Cascades and deletes tasks too (defined in schema)
     await prisma.assignment.delete({
       where: { id },
     });
