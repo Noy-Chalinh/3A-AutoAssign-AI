@@ -55,7 +55,7 @@ const statusConfig: Record<string, { label: string; icon: React.ReactNode; color
     [TaskStatus.TODO]: { label: 'To Do', icon: <Circle className="w-5 h-5" />, color: 'text-slate-400' },
     [TaskStatus.IN_PROGRESS]: { label: 'In Progress', icon: <Loader className="w-5 h-5" />, color: 'text-blue-600' },
     [TaskStatus.DONE]: { label: 'Done', icon: <CheckCircle2 className="w-5 h-5" />, color: 'text-green-600' },
-  }
+  };
 
 export default function TaskCard({ task, onUpdate }: TaskCardProps) {
   const [editDialogOpen, setEditDialogOpen] = useState(false);

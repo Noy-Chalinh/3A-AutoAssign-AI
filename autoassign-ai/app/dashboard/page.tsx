@@ -1,15 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Assignment, AssignmentStatus } from '@/lib/types';
-import { BookOpen, Calendar, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { BookOpen, Calendar, CheckCircle2, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-
-interface DashboardProps {
-  assignments: Assignment[];
-  loading?: boolean;
-}
 
 const statusConfig: Record<AssignmentStatus, { label: string; color: 'default' | 'primary' | 'success' | 'error' }> = {
   'PENDING': { label: 'Not Started', color: 'default' },
@@ -23,15 +18,25 @@ const getStatusIcon = (status: AssignmentStatus) => {
       return <CheckCircle2 className="w-4 h-4" />;
     case 'IN_PROGRESS':
       return <Clock className="w-4 h-4" />;
-    case 'PENDING':
-      return null;
     default:
       return null;
   }
 };
 
-export default function Dashboard({ assignments = [], loading = false }: DashboardProps) {
+export default function DashboardPage() {
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<AssignmentStatus | 'all'>('all');
+
+  useEffect(() => {
+    fetch('/api/assignments')
+      .then(r => r.json())
+      .then(data => {
+        setAssignments(data.assignments ?? []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
   const filteredAssignments = filter === 'all'
     ? assignments
@@ -137,7 +142,9 @@ export default function Dashboard({ assignments = [], loading = false }: Dashboa
         <div className="space-y-4">
           {filteredAssignments.map(assignment => {
             const completedTasks = assignment.tasks.filter(t => t.status === 'DONE').length;
-            const progress = (completedTasks / assignment.tasks.length) * 100;
+            const progress = assignment.tasks.length > 0
+              ? (completedTasks / assignment.tasks.length) * 100
+              : 0;
             const deadline = new Date(assignment.deadline);
             const today = new Date();
             const daysUntilDue = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));

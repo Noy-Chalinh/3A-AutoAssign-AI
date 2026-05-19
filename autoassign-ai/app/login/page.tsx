@@ -2,9 +2,9 @@
 
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 
-export default function LoginPage() {
+function LoginContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -12,7 +12,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     console.log('[LoginPage] Session status:', status, 'Session exists:', !!session);
-    
+
     if (status === 'authenticated' && session?.user) {
       console.log('[LoginPage] Redirecting to:', callbackUrl);
       router.push(callbackUrl);
@@ -95,5 +95,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
   );
 }

@@ -6,16 +6,17 @@ import { prisma } from '@/lib/prisma';
 // GET /api/assignments/[id] — get one assignment with all its tasks
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const assignment = await prisma.assignment.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         tasks: {
           orderBy: [
@@ -47,9 +48,10 @@ export async function GET(
 // DELETE /api/assignments/[id] — delete assignment and all its tasks
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -57,7 +59,7 @@ export async function DELETE(
 
     // Cascades and deletes tasks too (defined in schema)
     await prisma.assignment.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({

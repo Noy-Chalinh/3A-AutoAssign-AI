@@ -1,24 +1,48 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Assignment, Task } from '@/lib/types';
-import TaskCard from '../task_card/page';
+import TaskCard from '@/components/TaskCard';
 import { ArrowLeft, BookOpen, Calendar, Sparkles, Clock, TrendingUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 
-interface AssignmentDetailProps {
-  assignments: Assignment[];
-  onTaskUpdate: (assignmentId: string, taskId: string, updates: Partial<Task>) => void;
-  loading?: boolean;
-}
-
-export default function AssignmentDetail({ assignments = [], onTaskUpdate, loading = false }: AssignmentDetailProps) {
+export default function AssignmentDetailPage() {
   const params = useParams();
   const id = params.id as string;
-  const assignment = assignments.find(a => a.id === id);
+  const [assignment, setAssignment] = useState<Assignment | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!id) return;
+    fetch(`/api/assignments/${id}`)
+      .then(r => r.json())
+      .then(data => {
+        setAssignment(data.assignment ?? null);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [id]);
+
+  const handleTaskUpdate = useCallback(async (taskId: string, updates: Partial<Task>) => {
+    const res = await fetch(`/api/tasks/${taskId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setAssignment(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          tasks: prev.tasks.map(t => t.id === taskId ? { ...t, ...data.task } : t),
+        };
+      });
+    }
+  }, []);
 
   if (loading) {
     return (
@@ -61,7 +85,9 @@ export default function AssignmentDetail({ assignments = [], onTaskUpdate, loadi
 
   const completedTasks = assignment.tasks.filter(t => t.status === 'DONE').length;
   const inProgressTasks = assignment.tasks.filter(t => t.status === 'IN_PROGRESS').length;
-  const progress = (completedTasks / assignment.tasks.length) * 100;
+  const progress = assignment.tasks.length > 0
+    ? (completedTasks / assignment.tasks.length) * 100
+    : 0;
   const totalEstimatedHours = assignment.tasks.reduce((sum, task) => sum + task.estimatedHours, 0);
   const completedHours = assignment.tasks
     .filter(t => t.status === 'DONE')
@@ -105,9 +131,9 @@ export default function AssignmentDetail({ assignments = [], onTaskUpdate, loadi
               </div>
             </div>
             <Badge variant="secondary" className="flex items-center gap-1">
-                <Sparkles className="w-4 h-4" />
-                AI-Generated
-              </Badge>
+              <Sparkles className="w-4 h-4" />
+              AI-Generated
+            </Badge>
           </div>
 
           <p className="text-slate-700 mb-6">{assignment.description}</p>
@@ -176,7 +202,7 @@ export default function AssignmentDetail({ assignments = [], onTaskUpdate, loadi
                   <TaskCard
                     key={task.id}
                     task={task}
-                    onUpdate={(taskId, updates) => onTaskUpdate(assignment.id, taskId, updates)}
+                    onUpdate={handleTaskUpdate}
                   />
                 ))}
             </div>
@@ -195,7 +221,7 @@ export default function AssignmentDetail({ assignments = [], onTaskUpdate, loadi
                   <TaskCard
                     key={task.id}
                     task={task}
-                    onUpdate={(taskId, updates) => onTaskUpdate(assignment.id, taskId, updates)}
+                    onUpdate={handleTaskUpdate}
                   />
                 ))}
             </div>
@@ -212,7 +238,7 @@ export default function AssignmentDetail({ assignments = [], onTaskUpdate, loadi
                   <TaskCard
                     key={task.id}
                     task={task}
-                    onUpdate={(taskId, updates) => onTaskUpdate(assignment.id, taskId, updates)}
+                    onUpdate={handleTaskUpdate}
                   />
                 ))}
             </div>

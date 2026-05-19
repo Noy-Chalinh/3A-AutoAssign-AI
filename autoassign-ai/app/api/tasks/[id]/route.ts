@@ -6,16 +6,17 @@ import { prisma } from '@/lib/prisma';
 // GET /api/tasks/[id] — get single task
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const task = await prisma.task.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { assignment: true },
     });
 
@@ -37,9 +38,10 @@ export async function GET(
 // PATCH /api/tasks/[id] — update task status, date, or priority
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -51,7 +53,7 @@ export async function PATCH(
     const { status, scheduledDate, priority, calendarEventId } = body;
 
     const updated = await prisma.task.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...(status && { status }),
         ...(scheduledDate && { scheduledDate: new Date(scheduledDate) }),
@@ -74,16 +76,17 @@ export async function PATCH(
 // DELETE /api/tasks/[id] — delete a single task
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     await prisma.task.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ success: true, message: 'Task deleted' });
