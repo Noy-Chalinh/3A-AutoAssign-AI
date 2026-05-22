@@ -2,7 +2,7 @@
 
 import { openai } from './openai';
 import { prisma } from './prisma';
-import type { Assignment, Task } from '.prisma/client';
+import type { Assignment, Task } from '@prisma/client';
 
 // ─────────────────────────────────────────
 // Types
