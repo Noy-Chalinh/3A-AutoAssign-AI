@@ -16,13 +16,23 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
+    console.log('Body received:', JSON.stringify(body));
+
     const { userId, assignment, tasks } = body;
-    const { title, description, deadline, course } = assignment;
 
     // 2. Validate required fields
-    if (!userId || !title || !deadline) {
+    if (!userId || !assignment) {
       return NextResponse.json(
-        { error: 'Missing required fields: userId, title, deadline' },
+        { error: 'Missing required fields: userId, assignment' },
+        { status: 400 }
+      );
+    }
+
+    const { title, description, deadline, course } = assignment;
+
+    if (!title || !deadline) {
+      return NextResponse.json(
+        { error: 'Missing required fields: title, deadline' },
         { status: 400 }
       );
     }
